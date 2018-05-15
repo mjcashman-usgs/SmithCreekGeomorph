@@ -5,49 +5,30 @@
 rm(list=ls())
 
 getwd()
-setwd("Z:/Files/R_Projects/Smith Creek")
 
 #IMPORT DATA
-#CrossSections<-read.csv("SmithCreekCrossSections.csv")
-library(readxl)
-CrossSections<-read_excel("SmithCreekCrossSections.xlsx")
-
+if (!require('readxl')) install.packages('readxl'); library('readxl')
+CrossSections<-read_excel("Data/SmithCreekCrossSections.xlsx")
 
 ####Data Pre-Processing####
 
 #Rivers
-unique(CrossSections$NameofRiver)
-library(plyr)
-CrossSections$NameofRiver<-revalue(CrossSections$NameofRiver, c("SmithCreek"="Smith Creek",
-                                                                "Smith Creek "="Smith Creek"))
-unique(CrossSections$NameofRiver)
+if (!require('tidyverse')) install.packages('tidyverse'); library('tidyverse')
 
-#SiteID
-unique(CrossSections$SiteID) 
-CrossSections$SiteID<-revalue(CrossSections$SiteID, c("Bruce "="Bruce",
-                                                      "Cousins Backyard "="Cousins Backyard",
-                                                      "Cousin's Backyard"="Cousins Backyard",
-                                                      "Hippie Farms"="Hippie Farm",
-                                                      "P-1 "="P-1"))
+unique(CrossSections$NameofRiver)
 unique(CrossSections$SiteID)
-
-#Point Type
-unique(CrossSections$PointType) 
-CrossSections$PointType<-revalue(CrossSections$PointType, c("Cross Section "="Cross Section",
-                                                            "Backsite Point "="Backsite Point",
-                                                            "Extra Cross Section "="Extra Cross Section"))
-unique(CrossSections$PointType)
-CrossSections<-subset(CrossSections,PointType=="Cross Section")
 unique(CrossSections$PointType)
 
-#TransectID
-unique(CrossSections$TransectID)
-detach("package:plyr", unload=TRUE)
+CrossSections <- CrossSections %>%
+                   mutate(NameofRiver = fct_recode(NameofRiver, "Smith Creek" = "SmithCreek"))  %>% #Cleaning up River names
+                   mutate(SiteID = fct_recode(SiteID, "Hippie Farm" = "Hippie Farms")) %>% #Cleaning up SiteID Names
+                   filter(PointType == "Cross Section" ) #Selecting out only survey points, not backsite points, tile tops, pins, or bottom of fine-sediment
+                  
+
 
 #Split commas into multiple rows
 data<-CrossSections
-library(tidyr)
-library(dplyr)
+
 data.unnest<-data %>% 
   mutate(ChannelFeature = strsplit(as.character(ChannelFeature), ",")) %>% 
   unnest(ChannelFeature)
