@@ -6,6 +6,11 @@ rm(list=ls())
 
 getwd()
 
+mainDir <- "~"
+outputDir <- "output"
+
+
+
 #IMPORT DATA
 if (!require('readxl')) install.packages('readxl'); library('readxl')
 CrossSections<-read_excel("Data/SmithCreekCrossSections.xlsx")
@@ -24,16 +29,16 @@ CrossSections <- CrossSections %>%
                    mutate(SiteID = fct_recode(SiteID, "Hippie Farm" = "Hippie Farms")) %>% #Cleaning up SiteID Names
                    filter(PointType == "Cross Section" ) #Selecting out only survey points, not backsite points, tile tops, pins, or bottom of fine-sediment
                   
-
+unique(CrossSections$NameofRiver)
+unique(CrossSections$SiteID)
+unique(CrossSections$PointType)
 
 #Split commas into multiple rows
 data<-CrossSections
 
 data.unnest<-data %>% 
   mutate(ChannelFeature = strsplit(as.character(ChannelFeature), ",")) %>% 
-  unnest(ChannelFeature)
-
-data.unnest<-data.unnest %>% 
+  unnest(ChannelFeature) %>%
   mutate(ChannelFeature = strsplit(as.character(ChannelFeature), "/")) %>% 
   unnest(ChannelFeature)
 
@@ -44,7 +49,13 @@ uniqueXS_count<-data.unnest %>%
   group_by(NameofRiver,SiteID,TransectID) %>% 
   summarise(SurveyCounts=length(unique(DateandTime)))
 uniqueXS_count
-write.csv(uniqueXS_count, file = "uniqueXS_count.csv")
+
+mainDir <- getwd()
+subDir <- "output"
+
+ifelse(!dir.exists(file.path(mainDir, subDir)), dir.create(file.path(mainDir, subDir)), FALSE)
+write.csv(uniqueXS_count, file = "output/uniqueXS_count.csv")
+
 data.unnest$unique_site<-paste0(data.unnest$NameofRiver,", ",data.unnest$SiteID,", ",data.unnest$TransectID)
 
 #####Translation of LOcation Features to base without top/bottom
@@ -69,18 +80,18 @@ data.unnest$Class = factor(data.unnest$Class,levels=c("Floodplain","Bank","Bed")
 levels(data.unnest$Class)
 
 ###Date Formating
-data.unnest$DateandTime <-as.Date(data.unnest$DateandTime,"%d-%m-%y")
+#data.unnest$DateandTime <-as.Date(data.unnest$DateandTime,"%d-%m-%y") #Not needed?
 
-####Manual Subsetting####
 transect <- unique(unlist(data.unnest$unique_site))
 
-#Manual Subsets
- # transect<-transect[1]
+####Manual Subsetting####
+# transect<-transect[1]
   
 ####CALCULATIONS####
 #Start XS Loop
 all_transect<-NULL
 for (i in 1:length(transect)){
+  Current_Transect <- transect[i]
   transect_subset<-subset(data.unnest, unique_site==transect[i])
   print(paste("Plotting",transect[i]))
   
@@ -94,11 +105,12 @@ for (i in 1:length(transect)){
      ggtitle(paste0(transect[i]))+facet_grid(~Bank_Class,scale="free")+
      theme(plot.title = element_text(hjust = 0.5))
    print(plot)
-   name<-paste0(transect[i],".png")
-  # getwd()
-   setwd("Z:/Files/R_Projects/Smith Creek/Plots/final")
-  #  ggsave(name,plot=last_plot())
-   setwd("Z:/Files/R_Projects/Smith Creek")
+   
+   name<-paste0("output/plots/",transect[i],".png")
+
+   subDir <- "output/plots"
+   ifelse(!dir.exists(file.path(mainDir, subDir)), dir.create(file.path(mainDir, subDir)), FALSE)
+    #  ggsave(name,plot=last_plot())
 
   plot<-ggplot(subset(transect_subset, DateandTime==first(transect_subset$DateandTime)|DateandTime==last(transect_subset$DateandTime)),
                aes(x = FinalStation_m, y = FinalElevation_m, color=as.factor(DateandTime))) +
@@ -106,12 +118,9 @@ for (i in 1:length(transect)){
     ggtitle(paste0(transect[i]))+facet_grid(~Bank_Class,scale="free")+
     theme(plot.title = element_text(hjust = 0.5))
   print(plot)
-  name<-paste0(transect[i],".png")
-  # getwd()
-   setwd("Z:/Files/R_Projects/Smith Creek//Plots/final/SmithCreek_FirstLast_Plots")
-   ggsave(name,plot=last_plot(), width=10, height=5)
-   setwd("Z:/Files/R_Projects/Smith Creek")
-   
+  name<-paste0("output/plots/",transect[i],".png")
+  ggsave(name,plot=last_plot(), width=10, height=5)
+
 ####Subsetting for Polygonal calculations####
   all_class<-NULL
   for (k in 1:length(rev(unique(transect_subset$Class)))){
