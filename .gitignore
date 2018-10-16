@@ -26,3 +26,8 @@ vignettes/*.pdf
 rsconnect/
 .Rproj.user
 Data
+All_Change.csv
+All_Transects.csv
+uniqueXS_count.csv
+Cleanedlastbank.csv
+output

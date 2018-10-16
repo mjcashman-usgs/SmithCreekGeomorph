@@ -770,6 +770,9 @@ print(All_Change)
 #Export
 write.csv(All_Change, file = "All_Change.csv")
 write.csv(all_transect, file = "All_Transects.csv")
+write.csv(All_Change, file = "All_Change.csv")
+write.csv(data.unnest, file = "XS_unnest.csv")
+
 #Plot histogram
 library(ggplot2)
 
