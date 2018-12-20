@@ -14,9 +14,11 @@ cleanup<-function(x){
 
 
 #Import Data ----
+root.dir = getwd()
+
 ##Load in GIS attribute data
 ###Importing Watershed Attributes
-watershed_attr<-read.csv("Data/GIS_TransectWatershedAttr.csv") %>%
+watershed_attr<-read.csv(paste0(root.dir,"/Data/GIS_TransectWatershedAttr.csv")) %>%
   mutate(Transect = recode(Transect, "Bud Light" = "Bud Lite")) %>%
   unite(S_T, Transect, XS, sep="")
 watershed_attr$S_T <- cleanup(watershed_attr$S_T)
@@ -36,7 +38,7 @@ levels(factor(watershed_attr$S_T))
 
 
 ###Importing pour points
-attr_at_pour_points<-read.csv("Data/GIS_transects_as_pour_points.csv")%>%
+attr_at_pour_points<-read.csv(paste0(root.dir,"/Data/GIS_transects_as_pour_points.csv")) %>%
   mutate(SiteID = recode(SiteID, "Bud Light" = "Bud Lite")) %>%
   unite(S_T, SiteID, XS)
 attr_at_pour_points$S_T <- cleanup(attr_at_pour_points$S_T)
@@ -66,7 +68,7 @@ levels(factor(attr_at_pour_points$S_T))
 
 
 ###Importing channel attributes
-attr_on_channel<-read.csv("Data/GIS_all_transects_on_channel.csv")%>%
+attr_on_channel<-read.csv(paste0(root.dir,"/Data/GIS_all_transects_on_channel.csv")) %>%
   mutate(SiteID = recode(SiteID, "Bud Light" = "Bud Lite")) %>%
   unite(S_T, SiteID, XS)
 attr_on_channel$S_T <- cleanup(attr_on_channel$S_T)
@@ -121,7 +123,7 @@ levels(factor(attr_on_channel$S_T))
 ##Importing Field Data
 ###Importing Tile Accumulations
 #Import Tile Accumulations
-tile_distance_thalweg<-read.csv("Data/Clean_tile_dist_from_thalweg.csv") 
+tile_distance_thalweg<-read.csv(paste0(root.dir,"/Data/Clean_tile_dist_from_thalweg.csv")) 
 
 tile_distance_thalweg$SiteXS <- cleanup(tile_distance_thalweg$SiteXS)
 
@@ -134,7 +136,7 @@ levels(factor(tile_distance_thalweg$SiteXS))
 
 ###Importing Cross-Sectional Surveys
 #Import Cross-sectional Surveys
-XS_Change<-read.csv("Data/All_Change.csv") %>%
+XS_Change<-read.csv(paste0(root.dir,"/Data/All_Change.csv")) %>%
   select(-X)
 XS_Change$Site <- cleanup(XS_Change$Site)
 XS_Change$Transect <- cleanup(XS_Change$Transect)
@@ -157,7 +159,7 @@ XS_Change <- XS_Change %>%
 levels(factor(XS_Change$S_T))
 
 ###Importing Bank Pins
-Bank_Change <- read.csv("Data/Cleanedlastbank.csv") %>%
+Bank_Change <- read.csv(paste0(root.dir,"/Data/Cleanedlastbank.csv")) %>%
   mutate(SiteName = recode(SiteName, "Stoney Point Ln" = "stoney point ln")) %>%
   unite(S_T,SiteName,XS) %>%
   mutate(S_T = recode(S_T, "bart johnson_a-b us" = "bart johnson_ab")) 
@@ -200,7 +202,7 @@ Bank_Change <- Bank_Change %>%
 levels(factor(Bank_Change$S_T))
 
 ##importing Field secondary calculations 
-field_attributes <- read.csv("Data/field_attributes.csv") %>%
+field_attributes <- read.csv(paste0(root.dir,"/Data/field_attributes.csv")) %>%
   select(-unique_site) %>%
   unite(S_T, c("SiteID","TransectID"))
 
@@ -298,6 +300,8 @@ XS_ws_site <- XS_Change %>% #Calculating mean based on Site and average of Left 
   left_join(watershed_attr, by = c("Site")) 
 
 tile_ws_site <- tile_distance_thalweg %>% #No mean calculation yet due to possible variability in explanations
+  group_by(Site,Transect) %>%
+  summarise_at("deposit_mm_yr", mean) %>%
   left_join(attr_at_pour_points, by = c("Site")) %>%
   left_join(field_attributes, by = c("Site", "Transect")) %>%
   left_join(watershed_attr, by = c("Site")) 
@@ -323,6 +327,7 @@ XS_ws_transect <- XS_Change %>%
 
 tile_ws_transect <- tile_distance_thalweg %>% #No mean calculation yet due to possible variability in explanations
   left_join(attr_on_channel, by = c("Site","Transect")) %>%
+  left_join(field_attributes, by = c("Site", "Transect")) %>%
   left_join(watershed_attr, by = c("Site")) 
 
 Bank_ws_transect <- Bank_Change %>%
@@ -334,4 +339,4 @@ Bank_ws_transect <- Bank_Change %>%
   left_join(watershed_attr, by = c("Site")) 
 
 #Cleanup ----
-rm(attr_at_pour_points,attr_on_channel,Bank_Change,tile_distance_thalweg, watershed_attr,XS_Change, field_attributes, field_attributes_site_avg)
+rm(attr_at_pour_points,attr_on_channel,Bank_Change,tile_distance_thalweg, watershed_attr, XS_Change, field_attributes, field_attributes_site_avg)

@@ -98,7 +98,8 @@ field_attributes <- full_join(Bank_Angle, Bank_heights) %>%
   full_join(Channel_widths) %>%
   full_join(Floodplain_widths) %>%
   select(-NameofRiver) %>%
-  mutate(channelflood_ratio = channelwidth/floodwidth)
+  mutate(channelflood_ratio = channelwidth/floodwidth) %>%
+  mutate(bankflood_ratio = bankheight/floodwidth)
 
 #Take average from first and last survey for each site (only first and last because they are QA/QC)
 field_attributes <- field_attributes %>%
