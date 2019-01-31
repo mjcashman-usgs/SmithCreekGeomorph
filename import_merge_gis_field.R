@@ -338,5 +338,15 @@ Bank_ws_transect <- Bank_Change %>%
   left_join(attr_on_channel, by = c("Site","Transect")) %>%
   left_join(watershed_attr, by = c("Site")) 
 
+dir<-getwd()
+write_csv(XS_ws_transect, file.path(dir,"output/XS_ws_transect.csv"))
+write_csv(tile_ws_transect, file.path(dir,"output/tile_ws_transect.csv"))
+write_csv(Bank_ws_transect, file.path(dir,"output/Bank_ws_transect.csv"))
+
+write_csv(XS_ws_site, file.path(dir,"output/XS_ws_site.csv"))
+write_csv(tile_ws_site, file.path(dir,"output/tile_ws_site.csv"))
+write_csv(Bank_ws_site, file.path(dir,"output/Bank_ws_site.csv"))
+
+
 #Cleanup ----
 rm(attr_at_pour_points,attr_on_channel,Bank_Change,tile_distance_thalweg, watershed_attr, XS_Change, field_attributes, field_attributes_site_avg)
